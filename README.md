@@ -1,4 +1,5 @@
 RENAMECFD - Renombra archivos de CFD/CFDI
+Actualizado a version 3.3
 ------------------------------------
 Autor: *Ricardo Torres*
 email: *[rictor@cuhrt.com](mailto:rictor@cuhrt.com)*
