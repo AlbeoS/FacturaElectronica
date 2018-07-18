@@ -110,31 +110,31 @@ class XmlCFD(object):
             """ Se valida el tipo de comprobante, en caso de ser 'egreso'
                 se agrega signo negativo a los importes.
             """
-            self.atributos['tipoDeComprobante'] = compAtrib['tipoDeComprobante']
-            if self.atributos['tipoDeComprobante']=='egreso':
+            self.atributos['TipoDeComprobante'] = compAtrib['TipoDeComprobante']
+            if self.atributos['TipoDeComprobante']=='E':
                 signo= "-"
             else:
                 signo=""
 
 
             # Se trunca la parte de la hora de emisión
-            self.atributos['fecha']  = compAtrib['fecha'][:10]
+            self.atributos['Fecha']  = compAtrib['Fecha'][:10]
 
             # Se extrae la hora y se eliminan los ':' (dos puntos)
-            self.atributos['hora']   = compAtrib['fecha'][11:19]
-            self.atributos['hora'] = self.atributos['hora'].replace(":","")
+            self.atributos['Hora']   = compAtrib['Fecha'][11:19]
+            self.atributos['Hora'] = self.atributos['Hora'].replace(":","")
 
             # self.atributos['fecha'] += compAtrib['fecha'][11:2]
-            self.atributos['total'] = signo+compAtrib['total']
+            self.atributos['Total'] = signo+compAtrib['Total']
 
             # Si la compra tiene descuento, agrega el atributo de descuento.
-            if  'descuento' in compAtrib:
-                self.atributos['descuento'] = "-"+compAtrib['descuento']
+            if  'Descuento' in compAtrib:
+                self.atributos['Descuento'] = "-"+compAtrib['Descuento']
             else:
-                self.atributos['descuento'] = "0"
+                self.atributos['Descuento'] = "0"
 
-            self.atributos['subTotal'] = signo+compAtrib['subTotal']
-            version = compAtrib['version']
+            self.atributos['SubTotal'] = signo+compAtrib['SubTotal']
+            version = compAtrib['Version']
 
             if version == "1.0" or version == "2.0" or version == "2.2": # CFD
                 emisor = comprobante.getElementsByTagName('Emisor')
@@ -145,24 +145,34 @@ class XmlCFD(object):
                 receptor = comprobante.getElementsByTagName('cfdi:Receptor')
                 impuestos = comprobante.getElementsByTagName('cfdi:Impuestos')
                 impuestos2 = comprobante.getElementsByTagName('cfdi:Traslado')
-
+            elif version == "3.3": # CFDI 2018
+                emisor = comprobante.getElementsByTagName('cfdi:Emisor')
+                receptor = comprobante.getElementsByTagName('cfdi:Receptor')
+                impuestos = comprobante.getElementsByTagName('cfdi:Impuestos')
+                impuestos2 = comprobante.getElementsByTagName('cfdi:Traslado')
                 # complemento = comprobante.getElementsByTagName('cfdi:Complemento')
             else:
                 print
                 print "El archivo xml no es una versión válida de cfd!"
                 print
 
-            self.atributos['rfc'] = emisor[0].getAttribute('rfc')
-            self.atributos['nombre'] = emisor[0].getAttribute('nombre')
-            self.atributos['receptorRfc'] = receptor[0].getAttribute('rfc')
+            A = emisor[0].getAttribute('Rfc')
+            B = emisor[0].getAttribute('Nombre')
+            C = receptor[0].getAttribute('Rfc')
+            self.atributos['rfc'] = A
+            self.atributos['nombre'] = B
+            self.atributos['receptorRfc'] = C
 
-            if impuestos[0].getAttribute('totalImpuestosTrasladados')=="":
+            D = impuestos[0].getAttribute('TotalImpuestosTrasladados')
+            E = impuestos2[0].getAttribute('Importe')
+
+            if E=="":
                 try:
-                    self.atributos['iva'] = signo+impuestos2[0].getAttribute('importe')
+                    self.atributos['iva'] = signo+D
                 except:
                     self.atributos['iva'] = '0'
             else:
-                self.atributos['iva'] = signo+impuestos[0].getAttribute('totalImpuestosTrasladados')
+                self.atributos['iva'] = E
             self.atributos['version'] = version
 
 
@@ -189,21 +199,22 @@ class XmlCFD(object):
         nomFileXmlNew += os.sep if len(nomFileXmlNew) > 0 else ""
         if options.receptorrfc: # Se adiciona sólo si la opción -r está incluida
              nomFileXmlNew += '_'+self.atributos['receptorRfc']
-        nomFileXmlNew += '_'+self.atributos['fecha']
-        nomFileXmlNew += '_'+self.atributos['hora']
         nomFileXmlNew += '_'+self.atributos['rfc']
+        nomFileXmlNew += '_'+self.atributos['Fecha']
+        nomFileXmlNew += '_'+self.atributos['Hora']
+
 
         nomFileXmlNew += '_'+self.atributos['serie']
         nomFileXmlNew += '_'+self.atributos['folio']
 
 
-        nomFileXmlNew += '_'+self.atributos['subTotal']
+        nomFileXmlNew += '_'+self.atributos['SubTotal']
         nomFileXmlNew += '_'+self.atributos['iva']
-        nomFileXmlNew += '_'+self.atributos['total']
+        nomFileXmlNew += '_'+self.atributos['Total']
 
         if options.descuentos: # Se adiciona sólo si la opción -d está incluida
             nomFileXmlNew += '_'+self.atributos['descuento']
-        nomFileXmlNew += '_'+self.atributos['tipoDeComprobante']
+        nomFileXmlNew += '_'+self.atributos['TipoDeComprobante']
         nomFileXmlNew += '_'+self.atributos['version']
 
         #Los nuevos nombres de archivos para pdf y xml
